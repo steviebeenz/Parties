@@ -59,6 +59,7 @@ public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatab
 				((MariaDBConnectionFactory) ret).setPassword(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_PASSWORD);
 				((MariaDBConnectionFactory) ret).setMaximumPoolSize(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_POOLSIZE);
 				((MariaDBConnectionFactory) ret).setMaxLifetime(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_CONNLIFETIME);
+				((MariaDBConnectionFactory) ret).getDataSource().addDataSourceProperty("autoReconnect", true);
 				break;
 			case MYSQL:
 				ret = new MySQLConnectionFactory();
@@ -72,6 +73,7 @@ public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatab
 				((MySQLConnectionFactory) ret).setMaximumPoolSize(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_POOLSIZE);
 				((MySQLConnectionFactory) ret).setMaxLifetime(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_CONNLIFETIME);
 				((MySQLConnectionFactory) ret).setUseSSL(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_USESSL);
+				((MySQLConnectionFactory) ret).getDataSource().addDataSourceProperty("autoReconnect", true);
 				break;
 			case POSTGRESQL:
 				ret = new PostgreSQLConnectionFactory();

@@ -143,6 +143,12 @@
 			<version>${libs.sqlite}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>${libs.hikaricp}</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	
 </project>
