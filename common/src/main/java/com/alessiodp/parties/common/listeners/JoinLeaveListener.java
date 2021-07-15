@@ -1,7 +1,9 @@
 package com.alessiodp.parties.common.listeners;
 
 import com.alessiodp.core.common.user.User;
+import com.alessiodp.parties.api.Parties;
 import com.alessiodp.parties.api.enums.JoinCause;
+import com.alessiodp.parties.api.interfaces.PartiesAPI;
 import com.alessiodp.parties.common.PartiesPlugin;
 import com.alessiodp.parties.common.configuration.PartiesConstants;
 import com.alessiodp.parties.common.configuration.data.ConfigParties;
@@ -58,6 +60,39 @@ public abstract class JoinLeaveListener {
 					plugin.getLoggerManager().logDebug(String.format(PartiesConstants.DEBUG_PLAYER_JOIN_DEFAULTFAIL, ConfigParties.ADDITIONAL_FIXED_DEFAULT_PARTY), true);
 				}
 			}
+
+			// FORK ADDITION START
+			// Ensure player is not in a null party
+			antiNullParty:
+			{
+				PartiesAPI api = Parties.getApi();
+				try {
+					if (api.isPlayerInParty(partyPlayer.getPlayerUUID())) {
+						if (partyPlayer.getPartyId() == null) {
+							leaveParty(partyPlayer);
+							break antiNullParty;
+						}
+						if (api.getParty(partyPlayer.getPartyId()) == null) {
+							leaveParty(partyPlayer);
+							break antiNullParty;
+						}
+
+						// Attempt to access smfn that will be null -> error -> party leave
+
+						PartyImpl pty = (PartyImpl) api.getParty(partyPlayer.getPartyId());
+						String lower = pty.getName().toLowerCase();
+						String partyID = pty.getId().toString();
+
+						if (lower == null || partyID == null) {
+							leaveParty(partyPlayer);
+							break antiNullParty;
+						}
+					}
+				} catch (Exception e) {
+					leaveParty(partyPlayer);
+				}
+			}
+			// FORK ADDITION END
 			
 			if (ConfigParties.GENERAL_JOIN_LEAVE_MESSAGES && party != null) {
 				party.broadcastMessage(Messages.OTHER_JOINLEAVE_SERVERJOIN, partyPlayer);
@@ -107,4 +142,11 @@ public abstract class JoinLeaveListener {
 	protected abstract void onJoinComplete(PartyPlayerImpl partyPlayer);
 	
 	protected abstract void onLeaveComplete(PartyPlayerImpl partyPlayer);
+
+
+	// FORK ADDITION START
+	private void leaveParty(PartyPlayerImpl partyPlayer) {
+		partyPlayer.removeFromParty(true);
+	}
+	// FORK ADDITION END
 }
