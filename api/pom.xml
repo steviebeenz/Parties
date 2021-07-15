@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>parties</artifactId>
 		<groupId>com.alessiodp.parties</groupId>
-		<version>3.1.6</version>
+		<version>3.1.8</version>
 	</parent>
 	
 	<artifactId>parties-api</artifactId>
@@ -46,7 +46,7 @@
 		<dependency>
 			<groupId>org.checkerframework</groupId>
 			<artifactId>checker-qual</artifactId>
-			<version>3.13.0</version>
+			<version>3.15.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
