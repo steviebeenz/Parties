@@ -26,6 +26,7 @@ import com.alessiodp.parties.common.storage.sql.dao.players.H2PlayersDao;
 import com.alessiodp.parties.common.storage.sql.dao.players.PlayersDao;
 import com.alessiodp.parties.common.storage.sql.dao.players.PostgreSQLPlayersDao;
 import com.alessiodp.parties.common.storage.sql.dao.players.SQLitePlayersDao;
+import com.zaxxer.hikari.HikariConfig;
 import lombok.SneakyThrows;
 import org.jdbi.v3.core.Handle;
 
@@ -58,9 +59,10 @@ public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatab
 				((MariaDBConnectionFactory) ret).setPassword(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_PASSWORD);
 				((MariaDBConnectionFactory) ret).setMaximumPoolSize(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_POOLSIZE);
 				((MariaDBConnectionFactory) ret).setMaxLifetime(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_CONNLIFETIME);
-				System.out.println("[Parties] Base patching starting");
+				System.out.println("[Parties] Base patching starting - loader");
 				ret.init();
-				Field sealed = ((MariaDBConnectionFactory) ret).getDataSource().getClass().getField("sealed");
+                System.out.println("[Parties] Base patching starting - field changes");
+                Field sealed = HikariConfig.class.getDeclaredField("sealed");
 				sealed.setAccessible(true);
 				sealed.set(((MariaDBConnectionFactory) ret).getDataSource(), false);
 				System.out.println("[Parties] Patching");
