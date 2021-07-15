@@ -15,6 +15,7 @@ import com.alessiodp.parties.common.configuration.data.ConfigParties;
 import com.alessiodp.parties.common.parties.objects.PartyHomeImpl;
 import com.alessiodp.parties.common.parties.objects.PartyImpl;
 import com.alessiodp.parties.common.players.objects.PartyPlayerImpl;
+import com.alessiodp.parties.common.storage.LockedMariaDBConnectionFactory;
 import com.alessiodp.parties.common.storage.PartiesDatabaseManager;
 import com.alessiodp.parties.common.storage.interfaces.IPartiesDatabase;
 import com.alessiodp.parties.common.storage.sql.dao.parties.H2PartiesDao;
@@ -25,15 +26,11 @@ import com.alessiodp.parties.common.storage.sql.dao.players.H2PlayersDao;
 import com.alessiodp.parties.common.storage.sql.dao.players.PlayersDao;
 import com.alessiodp.parties.common.storage.sql.dao.players.PostgreSQLPlayersDao;
 import com.alessiodp.parties.common.storage.sql.dao.players.SQLitePlayersDao;
+import lombok.SneakyThrows;
 import org.jdbi.v3.core.Handle;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.lang.reflect.Field;
+import java.util.*;
 
 public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatabase {
 	
@@ -45,11 +42,13 @@ public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatab
 	}
 	
 	@Override
+	@SneakyThrows
 	public ConnectionFactory initConnectionFactory() {
 		ConnectionFactory ret = null;
+		// Try fix smfn idk if it will break tho
 		switch (storageType) {
 			case MARIADB:
-				ret = new MariaDBConnectionFactory();
+				ret = new LockedMariaDBConnectionFactory();
 				((MariaDBConnectionFactory) ret).setTablePrefix(ConfigMain.STORAGE_SETTINGS_GENERAL_SQL_PREFIX);
 				((MariaDBConnectionFactory) ret).setCharset(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_CHARSET);
 				((MariaDBConnectionFactory) ret).setServerName(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_ADDRESS);
@@ -59,7 +58,15 @@ public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatab
 				((MariaDBConnectionFactory) ret).setPassword(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_PASSWORD);
 				((MariaDBConnectionFactory) ret).setMaximumPoolSize(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_POOLSIZE);
 				((MariaDBConnectionFactory) ret).setMaxLifetime(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_CONNLIFETIME);
+				System.out.println("[Parties] Base patching starting");
+				ret.init();
+				Field sealed = ((MariaDBConnectionFactory) ret).getDataSource().getClass().getField("sealed");
+				sealed.setAccessible(true);
+				sealed.set(((MariaDBConnectionFactory) ret).getDataSource(), false);
+				System.out.println("[Parties] Patching");
 				((MariaDBConnectionFactory) ret).getDataSource().addDataSourceProperty("autoReconnect", true);
+				((MariaDBConnectionFactory) ret).getDataSource().getHikariPoolMXBean().softEvictConnections();
+				System.out.println("[Parties] Patched");
 				break;
 			case MYSQL:
 				ret = new MySQLConnectionFactory();
@@ -73,7 +80,6 @@ public class PartiesSQLDispatcher extends SQLDispatcher implements IPartiesDatab
 				((MySQLConnectionFactory) ret).setMaximumPoolSize(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_POOLSIZE);
 				((MySQLConnectionFactory) ret).setMaxLifetime(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_CONNLIFETIME);
 				((MySQLConnectionFactory) ret).setUseSSL(ConfigMain.STORAGE_SETTINGS_REMOTE_SQL_USESSL);
-				((MySQLConnectionFactory) ret).getDataSource().addDataSourceProperty("autoReconnect", true);
 				break;
 			case POSTGRESQL:
 				ret = new PostgreSQLConnectionFactory();
